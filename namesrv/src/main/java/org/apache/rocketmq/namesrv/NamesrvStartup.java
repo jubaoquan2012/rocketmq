@@ -79,8 +79,11 @@ public class NamesrvStartup {
             return null;
         }
 
+        //业务参数
         final NamesrvConfig namesrvConfig = new NamesrvConfig();
+        //网络参数
         final NettyServerConfig nettyServerConfig = new NettyServerConfig();
+        //设置默认的监听端口
         nettyServerConfig.setListenPort(9876);
         if (commandLine.hasOption('c')) {
             String file = commandLine.getOptionValue('c');
