@@ -52,9 +52,11 @@ public class NamesrvStartup {
     }
 
     public static NamesrvController main0(String[] args) {
-
         try {
+            //step1.首先解析配置文件:NamesrvConfig、NettyServerConfig
+            //step2.根据启动属性创建 NamesrvController 实例,并初始化实例(initialize()方法),NamesrvController 实例为 NameServer核心控制器
             NamesrvController controller = createNamesrvController(args);
+            //step3.创建JVM 钩子函数,并启动服务器,以便监听Broker、消息生产者的网络请求
             start(controller);
             String tip = "The Name Server boot success. serializeType=" + RemotingCommand.getSerializeTypeConfigInThisServer();
             log.info(tip);
@@ -134,18 +136,16 @@ public class NamesrvStartup {
         return controller;
     }
 
+    //创建JVM 钩子函数,并启动服务器,以便监听Broker、消息生产者的网络请求
     public static NamesrvController start(final NamesrvController controller) throws Exception {
-
         if (null == controller) {
             throw new IllegalArgumentException("NamesrvController is null");
         }
-
         boolean initResult = controller.initialize();
         if (!initResult) {
             controller.shutdown();
             System.exit(-3);
         }
-
         Runtime.getRuntime().addShutdownHook(new ShutdownHookThread(log, new Callable<Void>() {
             @Override
             public Void call() throws Exception {
