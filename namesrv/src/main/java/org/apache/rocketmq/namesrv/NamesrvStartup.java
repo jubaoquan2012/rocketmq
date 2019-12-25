@@ -114,20 +114,17 @@ public class NamesrvStartup {
             System.out.printf("Please set the %s variable in your environment to match the location of the RocketMQ installation%n", MixAll.ROCKETMQ_HOME_ENV);
             System.exit(-2);
         }
-
         LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
         JoranConfigurator configurator = new JoranConfigurator();
         configurator.setContext(lc);
         lc.reset();
         configurator.doConfigure(namesrvConfig.getRocketmqHome() + "/conf/logback_namesrv.xml");
-
         log = InternalLoggerFactory.getLogger(LoggerName.NAMESRV_LOGGER_NAME);
 
         MixAll.printObjectProperties(log, namesrvConfig);
         MixAll.printObjectProperties(log, nettyServerConfig);
 
         final NamesrvController controller = new NamesrvController(namesrvConfig, nettyServerConfig);
-
         // remember all configs to prevent discard
         controller.getConfiguration().registerConfig(properties);
 
@@ -139,7 +136,6 @@ public class NamesrvStartup {
         if (null == controller) {
             throw new IllegalArgumentException("NamesrvController is null");
         }
-
         boolean initResult = controller.initialize();
         if (!initResult) {
             controller.shutdown();
@@ -153,9 +149,7 @@ public class NamesrvStartup {
                 return null;
             }
         }));
-
         controller.start();
-
         return controller;
     }
 
@@ -171,7 +165,6 @@ public class NamesrvStartup {
         opt = new Option("p", "printConfigItem", false, "Print all config item");
         opt.setRequired(false);
         options.addOption(opt);
-
         return options;
     }
 

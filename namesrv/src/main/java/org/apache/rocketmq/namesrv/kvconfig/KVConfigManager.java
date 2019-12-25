@@ -16,6 +16,12 @@
  */
 package org.apache.rocketmq.namesrv.kvconfig;
 
+/**
+ * 读取或变更NameServer的配置属性，加载 NamesrvConfig 中配置的配置文件到内存，
+ * 此类一个亮点就是使用轻量级的非线程安全容器，再结合读写锁对资源读写进行保护。
+ * 尽最大程度提高线程的并发度。
+ */
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
