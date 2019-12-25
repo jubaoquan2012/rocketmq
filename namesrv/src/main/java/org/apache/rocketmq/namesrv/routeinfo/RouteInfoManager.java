@@ -143,7 +143,9 @@ public class RouteInfoManager {
         RegisterBrokerResult result = new RegisterBrokerResult();
         try {
             try {
-                /** step1:路由注册需要加锁,防止并发修改RouteInfoManager 中的路由表
+                /**
+                 * step1:
+                 * 路由注册需要加锁,防止并发修改RouteInfoManager 中的路由表
                  * 首先判断Broker 所有集群是否存在,如果不存在,则创建,然后将broker名加入到集群Broker集合中
                  * */
                 this.lock.writeLock().lockInterruptibly();
@@ -174,6 +176,12 @@ public class RouteInfoManager {
                     }
                 }
 
+                /**
+                 * step2:
+                 * 维护 BrokerData信息,首先从brokerAddrTable 根据BrokerName尝试获取Broker信息,
+                 * 如果不存在,则新建BrokerData 并放入brokerAddrTable ,registerFirst设置为true;
+                 * 如果存在,直接替换原先的,rigisterFirst设置为false,表示非第一次注册
+                 */
                 String oldAddr = brokerData.getBrokerAddrs().put(brokerId, brokerAddr);
                 registerFirst = registerFirst || (null == oldAddr);
 
@@ -185,6 +193,10 @@ public class RouteInfoManager {
                                 topicConfigWrapper.getTopicConfigTable();
                         if (tcTable != null) {
                             for (Map.Entry<String, TopicConfig> entry : tcTable.entrySet()) {
+                                /***
+                                 * step3:
+                                 *
+                                 */
                                 this.createAndUpdateQueueData(brokerName, entry.getValue());
                             }
                         }

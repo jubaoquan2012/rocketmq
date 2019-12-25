@@ -27,6 +27,13 @@ public class Message implements Serializable {
 
     private String topic;
     private int flag;
+    /**
+     * Message 扩展属性主要包含下面几个:
+     *  tag: 消息TAG,用于消息过滤.
+     *  keys:Message 索引键,多个用空格隔开,RocketMQ可以根据这些可以快速检索奥消息
+     *  waitStoreMsgOK: 消息发送时是否等消息存储完成后再返回
+     *  delayTimeLevel: 消息延迟级别,用于定时消息活消息重试
+     */
     private Map<String, String> properties;
     private byte[] body;
     private String transactionId;
