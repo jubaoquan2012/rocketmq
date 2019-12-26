@@ -678,7 +678,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
         TopicPublishInfo topicPublishInfo = this.topicPublishInfoTable.get(topic);
         if (null == topicPublishInfo || !topicPublishInfo.ok()) {
             this.topicPublishInfoTable.putIfAbsent(topic, new TopicPublishInfo());
-            /**如果缓存中没有该主题的路由信息,则从NameServer 查询该topic的路由信息*/
+            /** Producer 第一次发送消息，topic在nameserver中并不存在*/
             this.mQClientFactory.updateTopicRouteInfoFromNameServer(topic);
             topicPublishInfo = this.topicPublishInfoTable.get(topic);
         }
@@ -686,6 +686,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
         if (topicPublishInfo.isHaveTopicRouterInfo() || topicPublishInfo.ok()) {
             return topicPublishInfo;
         } else {
+            /** Producer 第二次请求会将isDefault=true，开启默认“TBW102”从namerserver获取路由信息*/
             this.mQClientFactory.updateTopicRouteInfoFromNameServer(topic, true, this.defaultMQProducer);
             topicPublishInfo = this.topicPublishInfoTable.get(topic);
             return topicPublishInfo;
@@ -694,12 +695,13 @@ public class DefaultMQProducerImpl implements MQProducerInner {
 
     /**
      * 消息发送 核心入口
-     * @param msg 待发送消息
-     * @param mq 消息将发送到该消息队列上
+     *
+     * @param msg               待发送消息
+     * @param mq                消息将发送到该消息队列上
      * @param communicationMode 消息发送墨水 SYNC ASYNC ONEWAY
-     * @param sendCallback 异步消息回调函数
-     * @param topicPublishInfo 主题路由信息
-     * @param timeout 消息发送超时时间
+     * @param sendCallback      异步消息回调函数
+     * @param topicPublishInfo  主题路由信息
+     * @param timeout           消息发送超时时间
      * @return
      * @throws MQClientException
      * @throws RemotingException
@@ -1111,6 +1113,9 @@ public class DefaultMQProducerImpl implements MQProducerInner {
         this.makeSureStateOK();
         Validators.checkMessage(msg, this.defaultMQProducer);
 
+        /**
+         * 查询 topic 的路由信息
+         */
         TopicPublishInfo topicPublishInfo = this.tryToFindTopicPublishInfo(msg.getTopic());
         if (topicPublishInfo != null && topicPublishInfo.ok()) {
             MessageQueue mq = null;

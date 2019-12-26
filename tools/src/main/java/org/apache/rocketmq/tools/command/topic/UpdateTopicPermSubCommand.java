@@ -18,6 +18,7 @@ package org.apache.rocketmq.tools.command.topic;
 
 import java.util.List;
 import java.util.Set;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -31,6 +32,11 @@ import org.apache.rocketmq.tools.command.CommandUtil;
 import org.apache.rocketmq.tools.command.SubCommand;
 import org.apache.rocketmq.tools.command.SubCommandException;
 
+/**
+ * 通过集群模式创建：Topic
+ * <p>
+ * 当用集群模式去创建topic时，集群里面每个broker的queue的数量相同，当用单个broker模式去创建topic时，每个broker的queue数量可以不一致。
+ */
 public class UpdateTopicPermSubCommand implements SubCommand {
 
     @Override
@@ -66,7 +72,7 @@ public class UpdateTopicPermSubCommand implements SubCommand {
 
     @Override
     public void execute(final CommandLine commandLine, final Options options,
-        RPCHook rpcHook) throws SubCommandException {
+                        RPCHook rpcHook) throws SubCommandException {
         DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
         try {
@@ -101,9 +107,13 @@ public class UpdateTopicPermSubCommand implements SubCommand {
                 System.out.printf("%s%n", topicConfig);
                 return;
             } else if (commandLine.hasOption('c')) {
+                /**
+                 * 通过集群模式创建与通过broker模式创建的逻辑大致相同，多了根据集群从nameserver获取集群下所有broker的master地址这个步骤，
+                 * 然后在循环发送topic信息到集群中的每个broker中，这个逻辑跟指定单个broker是一致的。
+                 */
                 String clusterName = commandLine.getOptionValue('c').trim();
                 Set<String> masterSet =
-                    CommandUtil.fetchMasterAddrByClusterName(defaultMQAdminExt, clusterName);
+                        CommandUtil.fetchMasterAddrByClusterName(defaultMQAdminExt, clusterName);
                 for (String addr : masterSet) {
                     defaultMQAdminExt.createAndUpdateTopicConfig(addr, topicConfig);
                     System.out.printf("update topic perm from %s to %s in %s success.%n", oldPerm, perm, addr);

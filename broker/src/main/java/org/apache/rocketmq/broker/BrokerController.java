@@ -176,7 +176,7 @@ public class BrokerController {
         this.nettyClientConfig = nettyClientConfig;
         this.messageStoreConfig = messageStoreConfig;
         this.consumerOffsetManager = new ConsumerOffsetManager(this);
-        /**调用TopicConfigManager*/
+        /** 初始化topicConfigManager */
         this.topicConfigManager = new TopicConfigManager(this);
         this.pullMessageProcessor = new PullMessageProcessor(this);
         this.pullRequestHoldService = new PullRequestHoldService(this);
@@ -860,6 +860,7 @@ public class BrokerController {
             handleSlaveSynchronize(messageStoreConfig.getBrokerRole());
         }
 
+        /**Broker 启动向 NameServer 注册信息*/
         this.registerBrokerAll(true, false, true);
 
         /**Broker 发送心跳包. 定时发送,10秒一次*/
@@ -907,6 +908,7 @@ public class BrokerController {
     public synchronized void registerBrokerAll(final boolean checkOrderConfig, boolean oneway, boolean forceRegister) {
         TopicConfigSerializeWrapper topicConfigWrapper = this.getTopicConfigManager().buildTopicConfigSerializeWrapper();
 
+        /**处理 topicConfigTable ,然后注册到NameServer中*/
         if (!PermName.isWriteable(this.getBrokerConfig().getBrokerPermission())
             || !PermName.isReadable(this.getBrokerConfig().getBrokerPermission())) {
             ConcurrentHashMap<String, TopicConfig> topicConfigTable = new ConcurrentHashMap<String, TopicConfig>();

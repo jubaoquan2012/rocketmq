@@ -17,6 +17,7 @@
 package org.apache.rocketmq.tools.command.topic;
 
 import java.util.Set;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
@@ -30,6 +31,10 @@ import org.apache.rocketmq.tools.command.CommandUtil;
 import org.apache.rocketmq.tools.command.SubCommand;
 import org.apache.rocketmq.tools.command.SubCommandException;
 
+/**
+ * 通过broker模式创建 :Topic
+ * 当用集群模式去创建topic时，集群里面每个broker的queue的数量相同，当用单个broker模式去创建topic时，每个broker的queue数量可以不一致。
+ */
 public class UpdateTopicSubCommand implements SubCommand {
 
     @Override
@@ -88,7 +93,7 @@ public class UpdateTopicSubCommand implements SubCommand {
 
     @Override
     public void execute(final CommandLine commandLine, final Options options,
-        RPCHook rpcHook) throws SubCommandException {
+                        RPCHook rpcHook) throws SubCommandException {
         DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
 
@@ -132,6 +137,11 @@ public class UpdateTopicSubCommand implements SubCommand {
             }
             topicConfig.setOrder(isOrder);
 
+            /**
+             * 从commandLine命令行工具获取运行时-b参数重的broker的地址，defaultMQAdminExt是默认的rocketmq控制台执行的API，
+             * 此时调用start方法，该方法创建了一个mqClientInstance，它封装了netty通信的细节，接着就是最重要的一步，
+             * 调用createAndUpdateTopicConfig将topic配置信息发送到指定的broker上，完成topic的创建。
+             */
             if (commandLine.hasOption('b')) {
                 String addr = commandLine.getOptionValue('b').trim();
 
@@ -143,7 +153,7 @@ public class UpdateTopicSubCommand implements SubCommand {
                     String orderConf = brokerName + ":" + topicConfig.getWriteQueueNums();
                     defaultMQAdminExt.createOrUpdateOrderConf(topicConfig.getTopicName(), orderConf, false);
                     System.out.printf("%s", String.format("set broker orderConf. isOrder=%s, orderConf=[%s]",
-                        isOrder, orderConf.toString()));
+                            isOrder, orderConf.toString()));
                 }
                 System.out.printf("create topic to %s success.%n", addr);
                 System.out.printf("%s", topicConfig);
@@ -155,7 +165,7 @@ public class UpdateTopicSubCommand implements SubCommand {
                 defaultMQAdminExt.start();
 
                 Set<String> masterSet =
-                    CommandUtil.fetchMasterAddrByClusterName(defaultMQAdminExt, clusterName);
+                        CommandUtil.fetchMasterAddrByClusterName(defaultMQAdminExt, clusterName);
                 for (String addr : masterSet) {
                     defaultMQAdminExt.createAndUpdateTopicConfig(addr, topicConfig);
                     System.out.printf("create topic to %s success.%n", addr);
@@ -163,16 +173,16 @@ public class UpdateTopicSubCommand implements SubCommand {
 
                 if (isOrder) {
                     Set<String> brokerNameSet =
-                        CommandUtil.fetchBrokerNameByClusterName(defaultMQAdminExt, clusterName);
+                            CommandUtil.fetchBrokerNameByClusterName(defaultMQAdminExt, clusterName);
                     StringBuilder orderConf = new StringBuilder();
                     String splitor = "";
                     for (String s : brokerNameSet) {
                         orderConf.append(splitor).append(s).append(":")
-                            .append(topicConfig.getWriteQueueNums());
+                                .append(topicConfig.getWriteQueueNums());
                         splitor = ";";
                     }
                     defaultMQAdminExt.createOrUpdateOrderConf(topicConfig.getTopicName(),
-                        orderConf.toString(), true);
+                            orderConf.toString(), true);
                     System.out.printf("set cluster orderConf. isOrder=%s, orderConf=[%s]", isOrder, orderConf);
                 }
 

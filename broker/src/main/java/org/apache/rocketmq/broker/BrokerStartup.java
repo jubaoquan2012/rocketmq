@@ -60,16 +60,11 @@ public class BrokerStartup {
 
     public static BrokerController start(BrokerController controller) {
         try {
-
             controller.start();
-
-            String tip = "The broker[" + controller.getBrokerConfig().getBrokerName() + ", "
-                + controller.getBrokerAddr() + "] boot success. serializeType=" + RemotingCommand.getSerializeTypeConfigInThisServer();
-
+            String tip = "The broker[" + controller.getBrokerConfig().getBrokerName() + ", " + controller.getBrokerAddr() + "] boot success. serializeType=" + RemotingCommand.getSerializeTypeConfigInThisServer();
             if (null != controller.getBrokerConfig().getNamesrvAddr()) {
                 tip += " and name server is " + controller.getBrokerConfig().getNamesrvAddr();
             }
-
             log.info(tip);
             System.out.printf("%s%n", tip);
             return controller;
@@ -207,6 +202,9 @@ public class BrokerStartup {
             MixAll.printObjectProperties(log, nettyClientConfig);
             MixAll.printObjectProperties(log, messageStoreConfig);
 
+            /**
+             * 创建 BrokerController 会在构造方法中设置 topicConfigManager
+             */
             final BrokerController controller = new BrokerController(
                 brokerConfig,
                 nettyServerConfig,
